@@ -22,18 +22,24 @@ parser2b = PydanticOutputParser(pydantic_object=Node2_SimilarEvents)
 prompt2b = PromptTemplate(
     template="""你是一位历史学家。请仔细分析以下维基百科摘要，并从中提取出5到10个与用户原始查询相关的历史事件。
 
+对于每个提取出的事件，请根据它与用户原始查询的关联程度，给出一个0.0到1.0之间的相关性评分（1.0代表最相关）。
+
+用户原始查询: {user_query}
 维基百科内容:
 {wiki_content}
 
 {format_instructions}
-请将提取的历史事件构造成一个列表。""",
-    input_variables=["wiki_content"],
+请将提取的历史事件（及对应评分）构造成一个列表。""",
+    input_variables=["user_query", "wiki_content"],
     partial_variables={"format_instructions": parser2b.get_format_instructions()},
 )
 
 # 4. Construct the final chain, using the tool
 chain2b = (
-    { "wiki_content": (lambda x: wikipedia_tool.run(x["search_query"])) }
+    { 
+        "wiki_content": (lambda x: wikipedia_tool.run(x["search_query"])),
+        "user_query": (lambda x: x["user_query"])
+    }
     | prompt2b
     | llm
     | parser2b

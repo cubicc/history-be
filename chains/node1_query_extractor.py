@@ -6,8 +6,7 @@ from models import Node1_PlannerOutput
 # --- Node 1: Planner ---
 parser1 = PydanticOutputParser(pydantic_object=Node1_PlannerOutput)
 prompt1 = PromptTemplate(
-    template="""分析用户的查询，提取关键信息，并规划下一步。
-对于时事、具体人物或技术性强的查询，规划使用维基百科。对于更抽象或概念性的查询，规划使用大模型内部知识。
+    template="""从用户的查询中提取关键人物和事件描述，并生成一个优化的、简洁的搜索查询语句，用于后续的知识库检索。
 
 {format_instructions}
 

@@ -4,10 +4,11 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 # Import models and chains from their modules
-from models import UserQuery, Node4_FinalAnalysis
-from chains.node1_planner import chain1 as planner_chain
+from models import UserQuery, Node4_FinalAnalysis, Node2_SimilarEvents
+from chains.node1_query_extractor import chain1 as query_extractor_chain
+# from chains.node1_5_wiki_query_optimizer import chain1_5 as wiki_query_optimizer_chain
 from chains.node2_llm_search import chain2a as llm_search_chain
-from chains.node2_wiki_search import chain2b as wiki_search_chain
+# from chains.node2_wiki_search import chain2b as wiki_search_chain
 from chains.node3_pattern_identifier import chain3 as pattern_identifier_chain
 from chains.node4_final_analyzer import chain4 as final_analyzer_chain
 
@@ -28,26 +29,33 @@ async def analyse(query: UserQuery):
     """
     workflow_outputs = []
 
-    # Node 1: Planner
-    planner_output = await planner_chain.ainvoke({"query": query.query})
-    workflow_outputs.append({"node": 1, "step": "Planner", "output": planner_output.dict()})
+    # Node 1: Extract Query
+    extractor_output = await query_extractor_chain.ainvoke({"query": query.query})
+    workflow_outputs.append({"node": 1, "step": "Query Extractor", "output": extractor_output.dict()})
 
-    # Node 2: Dynamic Execution with Fallback
-    similar_events = None
-    if planner_output.next_step == "wikipedia_search":
-        print("--- Attempting Node 2B (Wikipedia) ---")
-        try:
-            similar_events = await wiki_search_chain.ainvoke({"search_query": planner_output.search_query})
-            workflow_outputs.append({"node": 2, "step": "Wikipedia Search (Success)", "output": similar_events.dict()})
-        except Exception as e:
-            print(f"--- Wikipedia Tool Failed: {e} ---")
-            print("--- Falling back to Node 2A (LLM) ---")
-            workflow_outputs.append({"node": 2, "step": "Wikipedia Search (Failed)", "error": str(e)})
-    
-    if similar_events is None:
-        print("--- Executing Node 2A (LLM) ---")
-        similar_events = await llm_search_chain.ainvoke({"search_query": planner_output.search_query})
-        workflow_outputs.append({"node": 2, "step": "LLM Search", "output": similar_events.dict()})
+    # # Node 1.5: Wikipedia Query Optimizer
+    # print("--- Executing Node 1.5 (Wikipedia Query Optimizer) ---")
+    # wiki_query_output = await wiki_query_optimizer_chain.ainvoke({
+    #     "person": extractor_output.person,
+    #     "event_description": extractor_output.event_description
+    # })
+    # workflow_outputs.append({"node": 1.5, "step": "Wikipedia Query Optimizer", "output": wiki_query_output.dict()})
+
+    # # Node 2: Sequential Execution (Wiki then LLM)
+    # print("--- Executing Node 2B (Wikipedia) ---")
+    # wiki_events = await wiki_search_chain.ainvoke({"user_query": query.query, "search_query": wiki_query_output.wiki_search_term})
+    # workflow_outputs.append({"node": 2, "step": "Wikipedia Search", "output": wiki_events.dict()})
+
+    print("--- Executing Node 2A (LLM) ---")
+    llm_events = await llm_search_chain.ainvoke({"search_query": extractor_output.search_query})
+    workflow_outputs.append({"node": 2, "step": "LLM Search", "output": llm_events.dict()})
+
+    # # Combine the results from both searches
+    # combined_events_list = wiki_events.historical_events + llm_events.historical_events
+    # similar_events = Node2_SimilarEvents(historical_events=combined_events_list)
+    # workflow_outputs.append({"node": "2_combined", "step": "Combined Search Results", "output": similar_events.dict()})
+
+    similar_events = llm_events
 
     # Node 3: Identify underlying patterns
     underlying_patterns_output = await pattern_identifier_chain.ainvoke({"historical_events": similar_events.json()})
@@ -55,7 +63,7 @@ async def analyse(query: UserQuery):
 
     # Node 4: Predict and advise
     final_analysis = await final_analyzer_chain.ainvoke({
-        "analyzed_event": planner_output.json(),
+        "analyzed_event": extractor_output.json(),
         "historical_events": similar_events.json(),
         "patterns": underlying_patterns_output.patterns
     })

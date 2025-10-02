@@ -1,31 +1,23 @@
 import asyncio
 from chains.node2_wiki_search import chain2b
+from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_community.tools import WikipediaQueryRun
+
 from dotenv import load_dotenv
 
-async def main():
-    # Load environment variables
-    load_dotenv()
+# Load environment variables
+load_dotenv()
 
-    # A relevant Chinese search query to test the retriever
-    test_query = "美国货币紧缩历史"
-    print(f"--- Testing Node 2B (Wikipedia Retriever) with query: '{test_query}' ---")
+# A relevant Chinese search query to test the retriever
+test_query = "特朗普发布货币紧缩政策"
+api_wrapper = WikipediaAPIWrapper(
+    lang="zh",
+    top_k_results=3,
+    doc_content_chars_max=1500
+)
 
-    try:
-        # Invoke the chain. The chain now expects a 'search_query' key.
-        result = await chain2b.ainvoke({"search_query": test_query})
+# 2. Create the tool instance
+wikipedia_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
 
-        # Print the structured result
-        print("\n--- SUCCESS ---")
-        print("Structured output from chain2b:")
-        # The result is a Pydantic model, so we can print its dict representation
-        print(result.dict())
-
-    except Exception as e:
-        print(f"\n--- ERROR ---")
-        print(f"An error occurred during the test: {type(e).__name__}")
-        print(f"Error details: {e}")
-        import traceback
-        traceback.print_exc()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+res = wikipedia_tool.run(test_query)
+print(res)

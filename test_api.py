@@ -2,11 +2,13 @@ import httpx
 import json
 
 # 正在运行的 FastAPI 应用的 URL
-url = "http://127.0.0.1:8000/analyse"
+url = "http://127.0.0.1:8001/analyse"
 
 # 要发送到 API 的查询
 payload = {
-    "query": "特朗普上台，发布货币紧缩政策"
+    "query": "我已经三个月没有找到工作了"
+    # "query": "以色列什么时候停战"
+   # "query": "特朗普上台，发布货币紧缩政策"
 }
 
 print("正在向服务器发送请求...")

@@ -6,14 +6,17 @@ from typing import List, Literal
 class Node1_PlannerOutput(BaseModel):
     person: str = Field(description="关键人物")
     event_description: str = Field(description="事件的简要描述")
-    next_step: Literal["llm_search", "wikipedia_search"] = Field(description="规划下一步是使用大模型内部知识搜索还是调用维基百科进行搜索")
     search_query: str = Field(description="为下一步生成的优化搜索查询语句")
+
+class Node1_5_WikiQueryOutput(BaseModel):
+    wiki_search_term: str = Field(description="为维基百科优化的、最可能命中准确词条的搜索关键词")
 
 class Node2_HistoricalEvent(BaseModel):
     year: str = Field(description="事件发生的年份")
     event_name: str = Field(description="历史事件的名称")
     description: str = Field(description="历史事件的简要描述")
     outcome: str = Field(description="历史事件的最终结果")
+    relevance_score: float = Field(description="该历史事件与用户原始查询的相关性评分，取值范围为 0.0 (完全不相关) 到 1.0 (完全相关)")
 
 class Node2_SimilarEvents(BaseModel):
     historical_events: List[Node2_HistoricalEvent] = Field(description="相似历史事件的列表")
