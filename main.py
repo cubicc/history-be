@@ -1,10 +1,11 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import json
 from datetime import datetime
 from dotenv import load_dotenv
 
 # Import models and chains from their modules
-from models import UserQuery, Node4_FinalAnalysis, Node2_SimilarEvents
+from models import UserQuery, Node2_SimilarEvents, Node4_FinalAnalysis, FullAnalysisResponse, FuturePredictionWithId
 from chains.node1_query_extractor import chain1 as query_extractor_chain
 # from chains.node1_5_wiki_query_optimizer import chain1_5 as wiki_query_optimizer_chain
 from chains.node2_llm_search import chain2a as llm_search_chain
@@ -22,7 +23,16 @@ app = FastAPI(
     version="1.2.0", # Incremented version for the refactor
 )
 
-@app.post("/analyse", response_model=Node4_FinalAnalysis)
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+@app.post("/analyse", response_model=FullAnalysisResponse)
 async def analyse(query: UserQuery):
     """
     接收用户查询并执行一个动态的、模块化的四步分析工作流。
@@ -77,4 +87,17 @@ async def analyse(query: UserQuery):
     
     print(f"Workflow output saved to {output_filename}")
 
-    return final_analysis
+    # Combine all results into the final response model, adding IDs to predictions
+    predictions_with_ids = [
+        FuturePredictionWithId(id=i+1, **p.dict())
+        for i, p in enumerate(final_analysis.future_predictions)
+    ]
+
+    final_response = FullAnalysisResponse(
+        historical_events=similar_events.historical_events,
+        future_predictions=predictions_with_ids,
+        overall_analysis=final_analysis.overall_analysis,
+        suggestion=final_analysis.suggestion
+    )
+
+    return final_response
