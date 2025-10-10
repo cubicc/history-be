@@ -92,12 +92,20 @@ async def analyse(query: UserQuery):
         FuturePredictionWithId(id=i+1, **p.dict())
         for i, p in enumerate(final_analysis.future_predictions)
     ]
+    
+    # Add predictions_with_ids to workflow_outputs
+    workflow_outputs.append({
+        "node": "final_response", 
+        "step": "Predictions with IDs", 
+        "output": [p.dict() for p in predictions_with_ids]
+    })
 
     final_response = FullAnalysisResponse(
         historical_events=similar_events.historical_events,
         future_predictions=predictions_with_ids,
         overall_analysis=final_analysis.overall_analysis,
-        suggestion=final_analysis.suggestion
+        suggestion=final_analysis.suggestion,
+        practical_advice=final_analysis.practical_advice
     )
 
     return final_response

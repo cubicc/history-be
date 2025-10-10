@@ -40,12 +40,14 @@ class Node4_FinalAnalysis(BaseModel):
     overall_analysis: str = Field(description="基于所有历史事件和规律，对用户查询事件的宏观、整体性分析")
     future_predictions: List[FuturePrediction] = Field(description="对未来不同时间范围内的结构化预测列表")
     suggestion: str = Field(description="给用户的最终、可执行的建议")
+    practical_advice: str = Field(description="基于事件分析，给出可执行的、可操作的、对个人的实际建议，具有公益性。例如：煤气爆炸事件返回防火守则，货币危机返回具体理财建议")
 
 class FullAnalysisResponse(BaseModel):
     historical_events: List[Node2_HistoricalEvent] = Field(description="与用户查询相似的历史事件列表")
     future_predictions: List[FuturePredictionWithId] = Field(description="对未来不同时间范围内的结构化预测列表")
     overall_analysis: str = Field(description="基于所有历史事件和规律，对用户查询事件的宏观、整体性分析")
     suggestion: str = Field(description="给用户的最终、可执行的建议")
+    practical_advice: str = Field(description="基于事件分析，给出可执行的、可操作的、对个人的实际建议，具有公益性。例如：煤气爆炸事件返回防火守则，货币危机返回具体理财建议")
 
 # --- User Input Model ---
 

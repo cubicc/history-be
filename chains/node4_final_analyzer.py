@@ -30,6 +30,8 @@ template="""角色：你是一位精通预测的智者，擅长依据已有事�
     *   `probability`: 基于数据和模型，该预测发生的客观概率 (0-100)。
 3.  **suggestion**: 针对用户本人给出一句浓缩的谏言，要求有逻辑性和说服力，但不要过于具体，给用户引导，类似于名人名言
     例如："机会很快会到来，始终留在牌桌上", "谨慎加仓核心资产，回避高杠杆高贝塔标的，耐心是最好的操作"
+4.  **practical_advice**: 基于事件分析，给出具有公益性的，可执行的、可操作的、对个人的实际建议。要求具体、实用、可操作性强。
+    例如：煤气爆炸事件返回防火守则和应急措施；货币危机返回具体的理财建议和资产配置方案
 """,
     input_variables=["analyzed_event", "historical_events", "patterns"],
     partial_variables={"format_instructions": parser4.get_format_instructions()},
